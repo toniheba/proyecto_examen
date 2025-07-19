@@ -29,6 +29,15 @@ def read_root():
 # READ
 # UPDATE Actualizar
 # DELETE
+
+@app.get("/huespedes/{id_huesped}", response_model=Huesped)
+def leer_huesped(id_huesped:str):
+    with Session(engine) as session:
+        huesped = session.get(Huesped, id_huesped)
+        if not huesped:
+            raise HTTPException(status_code=404, detail="El huesped no fue encontrado")
+        return huesped
+
 @app.post("/huespedes", response_model=Huesped, 
           status_code=status.HTTP_201_CREATED)
 def crear_huesped(huesped:Huesped):
@@ -56,8 +65,20 @@ def eliminar_husped(id_huesped:str):
         session.delete(huesped)
         session.commit()
 
+@app.put("/huespedes/{id_huesped}")
+def actualizar_huesped(id_huesped: str, datos: Huesped):
+    huesped = session.get(Huesped, id_huesped)
+    if not huesped:
+        raise HTTPException(status_code=404, detail="Huésped no encontrado")
 
-@app.put("/huespedes/{id_huesped}", response_model=Huesped)
+    for key, value in datos.dict().items():
+        setattr(huesped, key, value)
+
+    session.add(huesped)
+    session.commit()
+    return huesped
+
+@app.put("/huespedes/{id_huesped}")
 def actualizar_huesped(id_huesped: str, huesped_actualizar: Huesped):
     with Session(engine) as session:
         huesped = session.get(Huesped, id_huesped)
@@ -66,7 +87,6 @@ def actualizar_huesped(id_huesped: str, huesped_actualizar: Huesped):
         huesped.nombre = huesped_actualizar.nombre
         huesped.apellidos = huesped_actualizar.apellidos
         huesped.telefono = huesped_actualizar.telefono
-        huesped.direccion = huesped_actualizar.direccion
         huesped.nombre_cabana = huesped_actualizar.nombre_cabana
         huesped.fecha_ingreso = huesped_actualizar.fecha_ingreso
         huesped.fecha_salida = huesped_actualizar.fecha_salida
@@ -80,4 +100,4 @@ def actualizar_huesped(id_huesped: str, huesped_actualizar: Huesped):
         session.add(huesped)
         session.commit()
         session.refresh(huesped)
-        return huesped
+        return huesped 
